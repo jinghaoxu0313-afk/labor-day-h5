@@ -344,10 +344,26 @@
   <!-- 分享区 -->
   <div class="share-section" id="share-section">
     <div class="share-row">
-      <button class="share-btn" onclick="copyLink()">🔗 复制分享链接</button>
-      <button class="share-btn primary" onclick="shareWechat()">💬 分享给朋友</button>
+      <button class="share-btn" onclick="copyLink()">🔗 复制链接</button>
+      <button class="share-btn primary" id="wechat-share-btn" onclick="shareWechat()">💬 分享给朋友</button>
     </div>
-    <div class="copy-tip" id="copy-tip">✅ 链接已复制，快去分享给朋友吧！</div>
+    <div class="copy-tip" id="copy-tip">✅ 链接已复制，去微信粘贴给朋友吧！</div>
+    <div id="wechat-hint" style="display:none;margin-top:10px;background:rgba(7,193,96,0.15);border:1px solid rgba(7,193,96,0.4);border-radius:10px;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.7">
+      📱 在微信中打开时，请点右上角 <strong style="color:#ffd166">···</strong> → 选「发送给朋友」
+    </div>
+  </div>
+
+  <!-- 微信引导蒙层 -->
+  <div id="wechat-overlay" onclick="closeWechatOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999">
+    <div style="position:absolute;top:0;right:0;width:100%;padding:20px 20px 0;text-align:right">
+      <div style="display:inline-block;background:rgba(255,255,255,0.95);border-radius:12px;padding:14px 18px;color:#333;font-size:14px;line-height:1.8;text-align:left;max-width:220px;position:relative">
+        <div style="font-weight:600;color:#07c160;margin-bottom:6px">点击右上角 ···</div>
+        <div>然后选择「发送给朋友」<br>或「分享到朋友圈」</div>
+        <div style="position:absolute;top:-10px;right:20px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:10px solid rgba(255,255,255,0.95)"></div>
+      </div>
+      <div style="font-size:48px;margin-right:4px;margin-top:-4px">👆</div>
+    </div>
+    <div style="position:absolute;bottom:80px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.6);font-size:13px">点击任意位置关闭</div>
   </div>
 
   <div class="bottom-deco">
@@ -585,23 +601,33 @@ function showCopyTip() {
   setTimeout(() => tip.classList.remove('show'), 3000);
 }
 
+function isWechat() {
+  return /MicroMessenger/i.test(navigator.userAgent);
+}
+
 function shareWechat() {
-  const from = document.getElementById('from-input').value.trim();
-  const to = document.getElementById('to-input').value.trim();
-  const msg = to ? `${from || '我'}给你送来五一祝福！打开查看👇` : '五一劳动节快乐！送你一份祝福👇';
-  if (navigator.share) {
-    navigator.share({
-      title: '五一劳动节快乐 🎉',
-      text: msg,
-      url: window.location.href
-    }).catch(()=>{});
-  } else {
-    copyLink();
-    const tip = document.createElement('div');
-    tip.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:#fff;font-size:14px;padding:14px 24px;border-radius:12px;z-index:999;pointer-events:none;text-align:center;line-height:1.6`;
-    tip.innerHTML = '链接已复制！<br>请在微信中粘贴给朋友 😊';
-    document.body.appendChild(tip);
-    setTimeout(() => tip.remove(), 2500);
+  if (isWechat()) {
+    document.getElementById('wechat-overlay').style.display = 'block';
+    return;
+  }
+  copyLink();
+  const tip = document.createElement('div');
+  tip.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:#fff;font-size:14px;padding:16px 24px;border-radius:14px;z-index:9998;pointer-events:none;text-align:center;line-height:1.8;max-width:280px`;
+  tip.innerHTML = '🔗 链接已复制！<br><span style="font-size:12px;opacity:0.8">打开微信 → 任意聊天框 → 长按粘贴发送</span>';
+  document.body.appendChild(tip);
+  setTimeout(() => tip.remove(), 3000);
+}
+
+function closeWechatOverlay() {
+  document.getElementById('wechat-overlay').style.display = 'none';
+}
+
+function initShareBtn() {
+  if (isWechat()) {
+    const btn = document.getElementById('wechat-share-btn');
+    if (btn) btn.textContent = '💬 转发给朋友';
+    const hint = document.getElementById('wechat-hint');
+    if (hint) hint.style.display = 'block';
   }
 }
 
@@ -620,6 +646,7 @@ function shareWechat() {
 
 // ===== 初始化 =====
 initStars();
+initShareBtn();
 document.getElementById('hit-count-display').textContent = hitCount;
 if (hitCount > 0) {
   const badge = document.getElementById('hit-badge');
