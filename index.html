@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#c0392b">
 <title>五一劳动节快乐 🎉</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -343,13 +344,24 @@
 
   <!-- 分享区 -->
   <div class="share-section" id="share-section">
+    <button class="generate-btn" id="save-img-btn" onclick="saveAsImage()" style="background:linear-gradient(90deg,#07c160,#05a84e);margin-bottom:10px">
+      📸 生成祝福图片（长按保存转发）
+    </button>
     <div class="share-row">
       <button class="share-btn" onclick="copyLink()">🔗 复制链接</button>
-      <button class="share-btn primary" id="wechat-share-btn" onclick="shareWechat()">💬 分享给朋友</button>
+      <button class="share-btn primary" id="wechat-share-btn" onclick="shareWechat()">💬 转发给朋友</button>
     </div>
     <div class="copy-tip" id="copy-tip">✅ 链接已复制，去微信粘贴给朋友吧！</div>
-    <div id="wechat-hint" style="display:none;margin-top:10px;background:rgba(7,193,96,0.15);border:1px solid rgba(7,193,96,0.4);border-radius:10px;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.85);text-align:center;line-height:1.7">
-      📱 在微信中打开时，请点右上角 <strong style="color:#ffd166">···</strong> → 选「发送给朋友」
+  </div>
+
+  <!-- 图片预览蒙层 -->
+  <div id="img-overlay" onclick="closeImgOverlay()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch">
+    <div style="min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px">
+      <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:14px;text-align:center;line-height:1.7">
+        👇 <strong style="color:#ffd166">长按图片</strong> → 保存到相册<br>然后发送给朋友！
+      </div>
+      <img id="card-img" style="width:100%;max-width:360px;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,0.5)" src="" alt="祝福卡片">
+      <div style="margin-top:20px;color:rgba(255,255,255,0.45);font-size:12px">点击空白处关闭</div>
     </div>
   </div>
 
@@ -605,6 +617,35 @@ function isWechat() {
   return /MicroMessenger/i.test(navigator.userAgent);
 }
 
+// ===== 生成祝福图片 =====
+function saveAsImage() {
+  const btn = document.getElementById('save-img-btn');
+  btn.textContent = '⏳ 生成中...';
+  btn.disabled = true;
+
+  const card = document.getElementById('result-card');
+  html2canvas(card, {
+    scale: 3,
+    useCORS: true,
+    backgroundColor: null,
+    logging: false
+  }).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+    document.getElementById('card-img').src = imgData;
+    document.getElementById('img-overlay').style.display = 'block';
+    btn.textContent = '📸 生成祝福图片（长按保存转发）';
+    btn.disabled = false;
+  }).catch(() => {
+    btn.textContent = '📸 生成祝福图片（长按保存转发）';
+    btn.disabled = false;
+    alert('生成失败，请重试');
+  });
+}
+
+function closeImgOverlay() {
+  document.getElementById('img-overlay').style.display = 'none';
+}
+
 function shareWechat() {
   if (isWechat()) {
     document.getElementById('wechat-overlay').style.display = 'block';
@@ -626,8 +667,6 @@ function initShareBtn() {
   if (isWechat()) {
     const btn = document.getElementById('wechat-share-btn');
     if (btn) btn.textContent = '💬 转发给朋友';
-    const hint = document.getElementById('wechat-hint');
-    if (hint) hint.style.display = 'block';
   }
 }
 
