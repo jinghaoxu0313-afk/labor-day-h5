@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#c0392b">
+<title>五一劳动节快乐 🎉</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --red: #e03030;
+    --dark-red: #b52020;
+    --gold: #f5a623;
+    --gold-light: #ffd166;
+    --cream: #fff9f0;
+    --text-dark: #2c1a0e;
+    --text-mid: #6b4226;
+  }
+
+  html, body {
+    width: 100%; min-height: 100vh;
+    background: linear-gradient(160deg, #c0392b 0%, #922b21 40%, #1a0a06 100%);
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif;
+    overflow-x: hidden;
+    color: #fff;
+    user-select: none;
+  }
+
+  /* ===== 烟花画布 ===== */
+  #fireworks-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 1;
+  }
+
+  /* ===== 星星背景 ===== */
+  .stars-bg {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
+    overflow: hidden;
+  }
+  .star { position: absolute; border-radius: 50%; background: #fff; opacity: 0; animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s); }
+  @keyframes twinkle { 0%,100%{opacity:0} 50%{opacity:var(--op,0.6)} }
+
+  /* ===== 页面容器 ===== */
+  .page { position: relative; z-index: 10; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 0 16px 40px; }
+
+  /* ===== 顶部标语 ===== */
+  .top-banner {
+    width: 100%; text-align: center;
+    padding: 36px 16px 0;
+    animation: slideDown 0.8s ease both;
+  }
+  @keyframes slideDown { from{opacity:0;transform:translateY(-30px)} to{opacity:1;transform:translateY(0)} }
+
+  .banner-sub { font-size: 13px; letter-spacing: 4px; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .banner-main {
+    font-size: 38px; font-weight: 800;
+    color: var(--gold-light);
+    text-shadow: 0 0 20px rgba(245,166,35,0.6), 0 2px 4px rgba(0,0,0,0.4);
+    line-height: 1.2;
+    letter-spacing: 4px;
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  @keyframes glow { from{text-shadow: 0 0 10px rgba(245,166,35,0.4)} to{text-shadow: 0 0 30px rgba(245,166,35,0.9), 0 0 60px rgba(245,166,35,0.4)} }
+  .banner-year { font-size: 14px; color: var(--gold); letter-spacing: 2px; margin-top: 6px; }
+
+  /* ===== 挥锤互动区 ===== */
+  .hammer-zone {
+    margin-top: 32px;
+    display: flex; flex-direction: column; align-items: center;
+    animation: slideUp 0.9s 0.3s ease both;
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+
+  .hammer-hint { font-size: 13px; color: rgba(255,255,255,0.65); letter-spacing: 1px; margin-bottom: 16px; }
+
+  .hammer-btn {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f5a623, #c0392b);
+    border: 3px solid rgba(245,166,35,0.7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 0 rgba(245,166,35,0.5);
+    animation: pulse 2s ease-in-out infinite;
+    position: relative;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 0 rgba(245,166,35,0.5); }
+    50% { box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 14px rgba(245,166,35,0); }
+  }
+  .hammer-btn:active { transform: scale(0.88) rotate(-15deg); }
+  .hammer-btn.hit { animation: hitAnim 0.3s ease; }
+  @keyframes hitAnim { 0%{transform:scale(1)} 40%{transform:scale(0.85) rotate(-20deg)} 100%{transform:scale(1) rotate(0deg)} }
+
+  .hit-count-badge {
+    position: absolute; top: -6px; right: -6px;
+    background: var(--gold); color: #fff;
+    border-radius: 20px; font-size: 12px; font-weight: 700;
+    padding: 2px 8px; min-width: 28px; text-align: center;
+    display: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  /* ===== 祝福语轮播 ===== */
+  .wish-section {
+    margin-top: 28px; width: 100%;
+    animation: slideUp 0.9s 0.5s ease both;
+  }
+  .wish-card {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(245,166,35,0.35);
+    border-radius: 16px;
+    padding: 20px 24px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+    min-height: 88px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .wish-card::before {
+    content: '"';
+    position: absolute; top: 6px; left: 14px;
+    font-size: 40px; color: rgba(245,166,35,0.2); font-family: Georgia;
+    line-height: 1;
+  }
+  .wish-text {
+    font-size: 16px; line-height: 1.7;
+    color: rgba(255,255,255,0.95);
+    font-weight: 500;
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .wish-text.fade-out { opacity: 0; transform: translateY(8px); }
+  .wish-dots { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+  .wish-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: background 0.3s; }
+  .wish-dot.active { background: var(--gold); }
+
+  /* ===== 写祝福区 ===== */
+  .compose-section {
+    margin-top: 28px; width: 100%;
+    animation: slideUp 0.9s 0.7s ease both;
+  }
+  .section-title {
+    font-size: 13px; letter-spacing: 2px;
+    color: rgba(255,255,255,0.6);
+    text-align: center; margin-bottom: 14px;
+  }
+  .compose-box {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 16px;
+    padding: 16px;
+    backdrop-filter: blur(6px);
+  }
+  .name-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .name-input, .wish-input {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+    font-family: inherit;
+  }
+  .name-input::placeholder, .wish-input::placeholder { color: rgba(255,255,255,0.4); }
+  .name-input:focus, .wish-input:focus { border-color: rgba(245,166,35,0.6); }
+  .wish-input { resize: none; height: 72px; line-height: 1.6; }
+
+  .generate-btn {
+    width: 100%; margin-top: 12px;
+    background: linear-gradient(90deg, var(--gold), #e07b20);
+    border: none; border-radius: 10px;
+    color: #fff; font-size: 15px; font-weight: 700;
+    padding: 12px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 16px rgba(192,57,43,0.5);
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .generate-btn:active { opacity: 0.85; transform: scale(0.98); }
+
+  /* ===== 生成的祝福卡片 ===== */
+  .card-result {
+    display: none;
+    margin-top: 20px; width: 100%;
+    animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes popIn { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+  .result-card {
+    background: linear-gradient(135deg, #fff9ee, #ffe8c0);
+    border-radius: 20px;
+    padding: 28px 24px;
+    color: var(--text-dark);
+    text-align: center;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .result-card::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(45deg, rgba(245,166,35,0.04) 0, rgba(245,166,35,0.04) 1px, transparent 1px, transparent 12px);
+    pointer-events: none;
+  }
+  .result-from { font-size: 13px; color: var(--text-mid); margin-bottom: 6px; }
+  .result-to { font-size: 22px; font-weight: 800; color: var(--red); letter-spacing: 2px; margin-bottom: 16px; }
+  .result-flower { font-size: 32px; margin-bottom: 12px; }
+  .result-wish-text {
+    font-size: 15px; line-height: 1.8; color: var(--text-dark);
+    background: rgba(245,166,35,0.12);
+    border-radius: 10px; padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+  .result-date { font-size: 12px; color: var(--text-mid); }
+  .result-stamp {
+    position: absolute; top: 16px; right: 16px;
+    width: 52px; height: 52px;
+    border: 3px solid rgba(192,57,43,0.6);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: rgba(192,57,43,0.7); font-weight: 700;
+    letter-spacing: 0; text-align: center; line-height: 1.3;
+    transform: rotate(-15deg);
+  }
+
+  /* ===== 分享区 ===== */
+  .share-section {
+    display: none;
+    margin-top: 16px; width: 100%;
+    animation: slideUp 0.4s ease both;
+  }
+  .share-row { display: flex; gap: 10px; }
+  .share-btn {
+    flex: 1; padding: 12px;
+    border-radius: 12px;
+    border: 1.5px solid rgba(245,166,35,0.5);
+    background: rgba(255,255,255,0.08);
+    color: #fff; font-size: 14px;
+    cursor: pointer; text-align: center;
+    transition: background 0.2s;
+    font-family: inherit;
+    letter-spacing: 1px;
+  }
+  .share-btn:active { background: rgba(255,255,255,0.18); }
+  .share-btn.primary {
+    background: linear-gradient(90deg, #e03030, #b52020);
+    border-color: transparent;
+    font-weight: 700;
+  }
+  .copy-tip {
+    text-align: center; margin-top: 10px;
+    font-size: 12px; color: rgba(255,255,255,0.5);
+    display: none;
+  }
+  .copy-tip.show { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* ===== 底部装饰 ===== */
+  .bottom-deco {
+    margin-top: 32px; text-align: center;
+    font-size: 11px; color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
+    animation: slideUp 0.9s 0.9s ease both;
+  }
+
+  /* ===== 飘散粒子 ===== */
+  .particle {
+    position: fixed; pointer-events: none; z-index: 20;
+    font-size: 18px;
+    animation: floatUp var(--dur,1.2s) ease-out forwards;
+  }
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(-120px) scale(0.4) rotate(var(--rot,30deg)); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="fireworks-canvas"></canvas>
+<div class="stars-bg" id="stars-bg"></div>
+
+<div class="page">
+
+  <!-- 顶部标语 -->
+  <div class="top-banner">
+    <div class="banner-sub">★ 2026 ★</div>
+    <div class="banner-main">劳动节快乐</div>
+    <div class="banner-year">MAY DAY · 五月一日</div>
+  </div>
+
+  <!-- 互动挥锤 -->
+  <div class="hammer-zone">
+    <div class="hammer-hint">👇 点击锤子，送出祝福</div>
+    <div class="hammer-btn" id="hammer-btn" onclick="hitHammer(event)">
+      🔨
+      <span class="hit-count-badge" id="hit-badge">0</span>
+    </div>
+    <div style="margin-top:12px; font-size:13px; color:rgba(255,255,255,0.5)">
+      已有 <span id="hit-count-display" style="color:var(--gold);font-weight:700">0</span> 下祝福被送出
+    </div>
+  </div>
+
+  <!-- 祝福语轮播 -->
+  <div class="wish-section">
+    <div class="wish-card">
+      <div class="wish-text" id="wish-text">劳动创造世界，奋斗成就梦想。愿五一假期，为你充满能量！</div>
+    </div>
+    <div class="wish-dots" id="wish-dots"></div>
+  </div>
+
+  <!-- 写祝福区 -->
+  <div class="compose-section">
+    <div class="section-title">— 为TA定制专属祝福 —</div>
+    <div class="compose-box">
+      <div class="name-row">
+        <input class="name-input" id="from-input" placeholder="你的名字" maxlength="10" style="width:45%">
+        <input class="name-input" id="to-input" placeholder="对方的名字" maxlength="10" style="width:55%">
+      </div>
+      <textarea class="wish-input" id="custom-wish" placeholder="写下你的祝福语（选填，留空自动生成）" maxlength="80"></textarea>
+      <button class="generate-btn" onclick="generateCard()">✨ 生成我的祝福卡片</button>
+    </div>
+  </div>
+
+  <!-- 生成结果 -->
+  <div class="card-result" id="card-result">
+    <div class="result-card" id="result-card">
+      <div class="result-stamp">五一<br>快乐</div>
+      <div class="result-flower" id="result-flower">🌸</div>
+      <div class="result-from" id="result-from">来自：朋友</div>
+      <div class="result-to" id="result-to">祝你五一快乐！</div>
+      <div class="result-wish-text" id="result-wish-body">劳动创造幸福，假期充电蓄力，愿你五一假期快乐充实！</div>
+      <div class="result-date" id="result-date">2026年5月1日</div>
+    </div>
+  </div>
+
+  <!-- 分享区 -->
+  <div class="share-section" id="share-section">
+    <div class="share-row">
+      <button class="share-btn" onclick="copyLink()">🔗 复制分享链接</button>
+      <button class="share-btn primary" onclick="shareWechat()">💬 分享给朋友</button>
+    </div>
+    <div class="copy-tip" id="copy-tip">✅ 链接已复制，快去分享给朋友吧！</div>
+  </div>
+
+  <div class="bottom-deco">
+    ★ 劳动最光荣 · 奋斗最美丽 ★
+  </div>
+</div>
+
+<script>
+// ===== 配置 =====
+const WISHES = [
+  "劳动创造世界，奋斗成就梦想。愿五一假期，为你充满能量！",
+  "五月初一，愿辛勤的你收获满满，休憩中蓄积更多力量！",
+  "每一份努力都值得被看见，每一滴汗水都孕育着收获。五一快乐！",
+  "劳动节的意义，不只是假期，更是对每一位奋斗者的致敬。感谢你的付出！",
+  "愿这个五一，带走你的疲惫，留下满满的幸福与温暖。节日快乐！",
+];
+const AUTO_WISHES = [
+  "劳动最光荣，奋斗最美丽！愿你五一假期，放松身心，快乐充实！",
+  "辛苦了！五一假期好好休息，攒足力气，继续出发！",
+  "感谢你每一天的努力与坚持，愿五一假期带给你满满的幸福！",
+  "劳动节快乐！愿你的辛劳都被温柔以待，愿你的梦想都能如期实现！",
+  "今天是你的节日，好好享受吧！五一快乐，一切都值得！",
+];
+const FLOWERS = ["🌸","🌺","🌻","🌹","🌷","🎋","🌼","💐"];
+
+let hitCount = parseInt(localStorage.getItem('laborday_hits') || '0');
+let wishIndex = 0;
+let wishInterval;
+
+// ===== 星星背景 =====
+function initStars() {
+  const bg = document.getElementById('stars-bg');
+  for (let i = 0; i < 35; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random() * 3 + 1;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s;--op:${0.3+Math.random()*0.5}`;
+    bg.appendChild(s);
+  }
+}
+
+// ===== 烟花 =====
+const canvas = document.getElementById('fireworks-canvas');
+const ctx = canvas.getContext('2d');
+let particles_fw = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class FWParticle {
+  constructor(x, y, color) {
+    this.x = x; this.y = y; this.color = color;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 5 + 2;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed;
+    this.life = 1; this.decay = Math.random() * 0.02 + 0.012;
+    this.size = Math.random() * 3 + 1;
+  }
+  update() {
+    this.x += this.vx; this.y += this.vy;
+    this.vy += 0.08; this.vx *= 0.97; this.vy *= 0.97;
+    this.life -= this.decay;
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, this.life);
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function launchFirework(x, y) {
+  const colors = ['#f5a623','#e03030','#ffd166','#fff','#c0392b','#ff6b6b','#ffd700'];
+  for (let i = 0; i < 55; i++) {
+    particles_fw.push(new FWParticle(x, y, colors[Math.floor(Math.random()*colors.length)]));
+  }
+}
+
+function animateFireworks() {
+  requestAnimationFrame(animateFireworks);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles_fw = particles_fw.filter(p => p.life > 0);
+  particles_fw.forEach(p => { p.update(); p.draw(); });
+}
+animateFireworks();
+
+// 开场烟花
+setTimeout(() => launchFirework(canvas.width*0.3, canvas.height*0.25), 600);
+setTimeout(() => launchFirework(canvas.width*0.7, canvas.height*0.2), 1100);
+setTimeout(() => launchFirework(canvas.width*0.5, canvas.height*0.15), 1600);
+setTimeout(() => launchFirework(canvas.width*0.2, canvas.height*0.3), 2200);
+setTimeout(() => launchFirework(canvas.width*0.8, canvas.height*0.3), 2600);
+
+// 随机烟花
+setInterval(() => {
+  if (Math.random() > 0.5) {
+    launchFirework(Math.random() * canvas.width, Math.random() * canvas.height * 0.5);
+  }
+}, 4000);
+
+// ===== 锤子互动 =====
+function hitHammer(e) {
+  hitCount++;
+  localStorage.setItem('laborday_hits', hitCount);
+  document.getElementById('hit-count-display').textContent = hitCount;
+  const badge = document.getElementById('hit-badge');
+  badge.style.display = 'block';
+  badge.textContent = hitCount;
+
+  const btn = document.getElementById('hammer-btn');
+  btn.classList.remove('hit');
+  void btn.offsetWidth;
+  btn.classList.add('hit');
+
+  // 点击位置烟花
+  launchFirework(e.clientX || canvas.width/2, e.clientY || 200);
+
+  // 飘散粒子
+  spawnParticles(e.clientX, e.clientY);
+
+  // 里程碑提示
+  if (hitCount === 5 || hitCount === 10 || hitCount % 20 === 0) {
+    showMilestone(hitCount);
+  }
+}
+
+function spawnParticles(x, y) {
+  const emojis = ['⭐','🌟','✨','🎉','🎊','💫','🌸','🔥'];
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    p.style.cssText = `left:${(x||window.innerWidth/2)+(-30+Math.random()*60)}px;top:${(y||200)+(-10+Math.random()*20)}px;--dur:${0.8+Math.random()*0.7}s;--rot:${-40+Math.random()*80}deg`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1500);
+  }
+}
+
+function showMilestone(n) {
+  const tip = document.createElement('div');
+  tip.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(245,166,35,0.95);color:#fff;font-size:18px;font-weight:700;padding:14px 28px;border-radius:40px;z-index:999;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:popIn 0.4s ease`;
+  tip.textContent = n === 5 ? '🎉 五连击！热情满满！' : n === 10 ? '🏆 十连击！劳动最光荣！' : `🌟 ${n}下！你是最努力的人！`;
+  document.body.appendChild(tip);
+  setTimeout(() => tip.remove(), 2000);
+}
+
+// ===== 祝福语轮播 =====
+function initWishDots() {
+  const dots = document.getElementById('wish-dots');
+  WISHES.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'wish-dot' + (i===0?' active':'');
+    dots.appendChild(d);
+  });
+}
+
+function switchWish() {
+  const text = document.getElementById('wish-text');
+  text.classList.add('fade-out');
+  setTimeout(() => {
+    wishIndex = (wishIndex + 1) % WISHES.length;
+    text.textContent = WISHES[wishIndex];
+    text.classList.remove('fade-out');
+    document.querySelectorAll('.wish-dot').forEach((d,i) => d.classList.toggle('active', i===wishIndex));
+  }, 500);
+}
+
+initWishDots();
+wishInterval = setInterval(switchWish, 4000);
+
+// ===== 生成祝福卡片 =====
+function generateCard() {
+  const from = document.getElementById('from-input').value.trim() || '一位朋友';
+  const to = document.getElementById('to-input').value.trim();
+  const customWish = document.getElementById('custom-wish').value.trim();
+  const wishBody = customWish || AUTO_WISHES[Math.floor(Math.random()*AUTO_WISHES.length)];
+
+  document.getElementById('result-from').textContent = `来自：${from}`;
+  document.getElementById('result-to').textContent = to ? `亲爱的${to}，五一快乐！` : '五一劳动节快乐！';
+  document.getElementById('result-wish-body').textContent = wishBody;
+  document.getElementById('result-flower').textContent = FLOWERS[Math.floor(Math.random()*FLOWERS.length)];
+
+  const now = new Date();
+  document.getElementById('result-date').textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+
+  const cardResult = document.getElementById('card-result');
+  cardResult.style.display = 'block';
+  cardResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  document.getElementById('share-section').style.display = 'block';
+
+  // 生成时放烟花
+  setTimeout(() => {
+    launchFirework(canvas.width*0.4, canvas.height*0.5);
+    launchFirework(canvas.width*0.6, canvas.height*0.45);
+  }, 200);
+}
+
+// ===== 分享 =====
+function copyLink() {
+  const url = window.location.href.split('?')[0];
+  const from = document.getElementById('from-input').value.trim() || '';
+  const to = document.getElementById('to-input').value.trim() || '';
+  let shareUrl = url;
+  if (from || to) shareUrl += `?f=${encodeURIComponent(from)}&t=${encodeURIComponent(to)}`;
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(shareUrl).then(showCopyTip).catch(fallbackCopy.bind(null, shareUrl));
+  } else {
+    fallbackCopy(shareUrl);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+  document.body.appendChild(ta);
+  ta.select(); ta.setSelectionRange(0, 9999);
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  showCopyTip();
+}
+
+function showCopyTip() {
+  const tip = document.getElementById('copy-tip');
+  tip.classList.add('show');
+  setTimeout(() => tip.classList.remove('show'), 3000);
+}
+
+function shareWechat() {
+  const from = document.getElementById('from-input').value.trim();
+  const to = document.getElementById('to-input').value.trim();
+  const msg = to ? `${from || '我'}给你送来五一祝福！打开查看👇` : '五一劳动节快乐！送你一份祝福👇';
+  if (navigator.share) {
+    navigator.share({
+      title: '五一劳动节快乐 🎉',
+      text: msg,
+      url: window.location.href
+    }).catch(()=>{});
+  } else {
+    copyLink();
+    const tip = document.createElement('div');
+    tip.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.8);color:#fff;font-size:14px;padding:14px 24px;border-radius:12px;z-index:999;pointer-events:none;text-align:center;line-height:1.6`;
+    tip.innerHTML = '链接已复制！<br>请在微信中粘贴给朋友 😊';
+    document.body.appendChild(tip);
+    setTimeout(() => tip.remove(), 2500);
+  }
+}
+
+// ===== URL 参数预填 =====
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const f = params.get('f'), t = params.get('t');
+  if (f) document.getElementById('from-input').value = f;
+  if (t) document.getElementById('to-input').value = t;
+  if (f || t) {
+    setTimeout(() => {
+      generateCard();
+    }, 800);
+  }
+})();
+
+// ===== 初始化 =====
+initStars();
+document.getElementById('hit-count-display').textContent = hitCount;
+if (hitCount > 0) {
+  const badge = document.getElementById('hit-badge');
+  badge.style.display = 'block';
+  badge.textContent = hitCount;
+}
+</script>
+</body>
+</html>
